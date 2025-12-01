@@ -23,7 +23,9 @@ import {
   User,
   Mail,
   Loader2,
-  Briefcase
+  Briefcase,
+  Wallet,
+  Target
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { 
@@ -558,6 +560,259 @@ const TrustedBy = () => {
   );
 };
 
+const CompoundingGraph = () => {
+  const [monthlyContribution, setMonthlyContribution] = useState(500); // Default start value
+  const [annualReturn, setAnnualReturn] = useState(8); // Default 8% return
+  const [years, setYears] = useState(30); // Default 30 years
+  
+  // Formatting helper
+  const formatCurrency = (val: number) => 
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+
+  const width = 1000;
+  const height = 400;
+  const points = [];
+  // Calculate dynamic monthly rate based on slider
+  const monthlyRate = (annualReturn / 100) / 12; 
+  
+  // Calculate final value dynamically based on all states
+  const maxVal = monthlyContribution * (Math.pow(1 + monthlyRate, years * 12) - 1) / monthlyRate;
+
+  // Generate points
+  // We use a fixed number of segments (e.g., 100) to keep the curve smooth regardless of year count
+  const segments = 100;
+  for (let i = 0; i <= segments; i++) { 
+    const currentMonth = (i / segments) * (years * 12);
+    const val = monthlyContribution * (Math.pow(1 + monthlyRate, currentMonth) - 1) / monthlyRate;
+    
+    const x = (i / segments) * width;
+    // Normalize Y
+    const y = height - ((val / (maxVal || 1)) * height * 0.8); 
+    points.push(`${x},${y}`);
+  }
+
+  const pathData = `M0,${height} L` + points.join(' L');
+  const areaPathData = pathData + ` L${width},${height} Z`;
+
+  return (
+    <section className="bg-black py-24 px-6 border-b border-white/10 overflow-hidden">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+           <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">The Eighth Wonder of the World.</h2>
+           <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
+             Compound interest isn't magic; it's math. Use the sliders below to see how consistency, returns, and time impact your wealth.
+           </p>
+           
+           {/* Interactive Slider Controls */}
+           <div className="flex flex-col gap-6 bg-[#161617] p-6 rounded-2xl border border-white/10 max-w-xl mx-auto">
+              
+              {/* Contribution Slider */}
+              <div className="flex flex-col gap-2">
+                  <div className="flex justify-between w-full text-sm text-gray-400">
+                    <span>Monthly Contribution</span>
+                    <span className="text-white font-mono">{formatCurrency(monthlyContribution)}</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="50" 
+                    max="2500" 
+                    step="50" 
+                    value={monthlyContribution} 
+                    onChange={(e) => setMonthlyContribution(Number(e.target.value))}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  />
+                  <div className="flex justify-between w-full text-xs text-gray-500">
+                    <span>$50</span>
+                    <span>$2,500</span>
+                  </div>
+              </div>
+
+              {/* Annual Return Slider */}
+              <div className="flex flex-col gap-2">
+                  <div className="flex justify-between w-full text-sm text-gray-400">
+                    <span>Avg. Annual Return</span>
+                    <span className="text-white font-mono">{annualReturn}%</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="1" 
+                    max="15" 
+                    step="0.5" 
+                    value={annualReturn} 
+                    onChange={(e) => setAnnualReturn(Number(e.target.value))}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/50"
+                  />
+                  <div className="flex justify-between w-full text-xs text-gray-500">
+                    <span>1%</span>
+                    <span>15%</span>
+                  </div>
+              </div>
+
+              {/* Years Slider */}
+              <div className="flex flex-col gap-2">
+                  <div className="flex justify-between w-full text-sm text-gray-400">
+                    <span>Years to Grow</span>
+                    <span className="text-white font-mono">{years} Years</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="5" 
+                    max="50" 
+                    step="1" 
+                    value={years} 
+                    onChange={(e) => setYears(Number(e.target.value))}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  />
+                  <div className="flex justify-between w-full text-xs text-gray-500">
+                    <span>5 Years</span>
+                    <span>50 Years</span>
+                  </div>
+              </div>
+
+           </div>
+        </div>
+
+        <div className="relative w-full aspect-[16/9] md:aspect-[21/9] bg-[#161617] rounded-3xl border border-white/5 p-8 overflow-hidden group">
+           {/* Grid Lines */}
+           <div className="absolute inset-0 grid grid-cols-6 grid-rows-4 border-white/5">
+              {[...Array(24)].map((_, i) => (
+                <div key={i} className="border-r border-b border-white/5" />
+              ))}
+           </div>
+
+           {/* Labels */}
+           <div className="absolute top-8 left-8 text-white/50 text-xs font-mono">{formatCurrency(maxVal)}</div>
+           <div className="absolute bottom-8 left-8 text-white/50 text-xs font-mono">$0</div>
+           <div className="absolute bottom-8 right-8 text-white/50 text-xs font-mono">{years} Years</div>
+
+           {/* SVG Graph */}
+           <svg className="absolute inset-0 w-full h-full p-8" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="graphGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+
+              <path d={areaPathData} fill="url(#graphGradient)" className="transition-all duration-300 ease-out" />
+
+              <path 
+                d={pathData} 
+                fill="none" 
+                stroke="#3b82f6" 
+                strokeWidth="4" 
+                strokeLinecap="round"
+                className="drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-all duration-300 ease-out"
+              />
+              
+              {/* Animated Dot at the end */}
+              <circle cx={width} cy={height * 0.2} r="6" fill="white" className="animate-pulse shadow-[0_0_20px_rgba(255,255,255,0.8)]" />
+           </svg>
+           
+           {/* Floating Badge */}
+           <div className="absolute top-1/4 left-1/4 bg-black/80 backdrop-blur border border-white/10 p-4 rounded-xl shadow-2xl transform transition-transform hover:scale-105 duration-300 z-10">
+              <div className="flex items-center gap-3 mb-1">
+                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                 <span className="text-gray-400 text-xs uppercase tracking-wider">Projected Wealth</span>
+              </div>
+              <div className="text-3xl font-bold text-white tracking-tight">{formatCurrency(maxVal)}</div>
+              <div className="text-blue-400 text-xs mt-1">+{annualReturn}% Avg. Annual Return</div>
+           </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+const FinancialPillars = () => {
+  return (
+    <section className="bg-black py-32 px-6 border-b border-white/10">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-20">
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">The Financial Education Ladder.</h2>
+          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            A structured path from stability to mastery.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+           {/* Pillar 1: Personal Finance */}
+           <div className="bg-[#161617] rounded-3xl p-8 border border-white/10 hover:border-blue-500/50 transition-colors group">
+              <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                 <Wallet className="text-blue-400" size={24} />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">1. Personal Finance</h3>
+              <span className="text-blue-400 text-xs font-bold tracking-wider uppercase mb-4 block">Foundation</span>
+              <p className="text-gray-300 font-medium mb-4 italic">"Get control over your own money."</p>
+              
+              <ul className="space-y-3 mb-8">
+                {['Budgeting & Cash Flow', 'Emergency Buffers', 'Debt & Credit Logic', 'Avoiding Lifestyle Inflation', 'Basic Decisions'].map(item => (
+                    <li key={item} className="flex items-start gap-2 text-gray-400 text-sm">
+                        <CheckCircle size={14} className="text-blue-500 mt-1 shrink-0"/> {item}
+                    </li>
+                ))}
+              </ul>
+              
+              <div className="pt-6 border-t border-white/5">
+                 <p className="text-xs text-gray-500 leading-relaxed">
+                    <strong className="text-gray-300">Why it matters:</strong> You can’t build wealth on chaos. This stabilizes your life and creates your first layer of freedom.
+                 </p>
+              </div>
+           </div>
+
+           {/* Pillar 2: Investing */}
+           <div className="bg-[#161617] rounded-3xl p-8 border border-white/10 hover:border-green-500/50 transition-colors group">
+              <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                 <TrendingUp className="text-green-400" size={24} />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">2. Investing</h3>
+              <span className="text-green-400 text-xs font-bold tracking-wider uppercase mb-4 block">Growth</span>
+              <p className="text-gray-300 font-medium mb-4 italic">"Make money work for you."</p>
+              
+              <ul className="space-y-3 mb-8">
+                {['Stocks, Bonds & ETFs', 'Diversification & Risk', 'Retirement Planning', 'Evaluating Asset Quality', 'Insurance & Protection'].map(item => (
+                    <li key={item} className="flex items-start gap-2 text-gray-400 text-sm">
+                        <CheckCircle size={14} className="text-green-500 mt-1 shrink-0"/> {item}
+                    </li>
+                ))}
+              </ul>
+              
+              <div className="pt-6 border-t border-white/5">
+                 <p className="text-xs text-gray-500 leading-relaxed">
+                    <strong className="text-gray-300">Why it matters:</strong> This stage transforms you from earning money to owning assets that earn for you.
+                 </p>
+              </div>
+           </div>
+
+           {/* Pillar 3: Capital Allocation */}
+           <div className="bg-[#161617] rounded-3xl p-8 border border-white/10 hover:border-purple-500/50 transition-colors group">
+              <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                 <Target className="text-purple-400" size={24} />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">3. Capital Strategy</h3>
+              <span className="text-purple-400 text-xs font-bold tracking-wider uppercase mb-4 block">Mastery</span>
+              <p className="text-gray-300 font-medium mb-4 italic">"Think like an investor."</p>
+              
+              <ul className="space-y-3 mb-8">
+                {['Strategic Decision-Making', 'Opportunity Cost', 'Behavioral Finance', 'Business Valuation', 'Macro Cycles'].map(item => (
+                    <li key={item} className="flex items-start gap-2 text-gray-400 text-sm">
+                        <CheckCircle size={14} className="text-purple-500 mt-1 shrink-0"/> {item}
+                    </li>
+                ))}
+              </ul>
+              
+              <div className="pt-6 border-t border-white/5">
+                 <p className="text-xs text-gray-500 leading-relaxed">
+                    <strong className="text-gray-300">Why it matters:</strong> This is where true independence happens—allocating capital with intention and skill.
+                 </p>
+              </div>
+           </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 const BentoGrid = ({ onOpenMentor }: { onOpenMentor: () => void }) => {
   return (
     <section className="bg-black py-32 px-6">
@@ -911,6 +1166,10 @@ export default function App() {
       />
       
       <TrustedBy />
+
+      <CompoundingGraph />
+
+      <FinancialPillars />
 
       <BentoGrid onOpenMentor={() => setShowMentor(true)} />
       <Carousel />
