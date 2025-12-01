@@ -1,10 +1,9 @@
 # jos.github.io
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Mastery. Simplified.</title>
+    <title>Financial Education. Simplified.</title>
     <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom font import for a clean, modern look */
@@ -117,7 +116,7 @@
         
         <div class="max-w-4xl mx-auto mt-12 mb-16 hero-content">
             <h1 class="text-5xl sm:text-7xl lg:text-8xl font-extrabold tracking-tight mb-4">
-                Financial Mastery. <span class="block text-green-400">Finally Accessible.</span>
+                Financial Education. <span class="block text-green-400">Finally Accessible.</span>
             </h1>
             <p class="text-xl sm:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto">
                 Introducing the AI Mentor. A full-stack path from financial zero to confident wealth builder.
@@ -178,14 +177,13 @@
                         full HD video URL of the Shibuya crossing.
                         Due to environment restrictions, we cannot host the video file directly.
                     -->
-                    <source src="https://example.com/videos/shibuya_crossing.mp4" type="video/mp4">
+                    <source src="(https://www.youtube.com/watch?v=ajOIjwATsrU)" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
                 
                 <!-- Overlay text to maintain context and readability -->
                 <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
                     <p class="text-white text-4xl sm:text-5xl font-extrabold tracking-tight p-4">
-                        Financial Freedom is Global.
                     </p>
                 </div>
             </div>
